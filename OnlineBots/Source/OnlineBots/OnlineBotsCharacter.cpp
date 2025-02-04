@@ -45,6 +45,26 @@ void AOnlineBotsCharacter::BeginPlay()
 
 //////////////////////////////////////////////////////////////////////////// Input
 
+void AOnlineBotsCharacter::ChangeShape(const FInputActionValue& Value)
+{
+	if (Shapes.IsEmpty()) return;
+	
+	int Size = Shapes.Num();
+	
+	CurrentShapeIndex = CurrentShapeIndex + Value.Get<FVector2D>().X;
+	if (CurrentShapeIndex < 0)
+		{ CurrentShapeIndex = Size - 1; }
+	CurrentShapeIndex = CurrentShapeIndex % Size;
+	OnChangeShape.Broadcast();
+}
+
+TSubclassOf<AABaseShape> AOnlineBotsCharacter::GetCurrentShape()
+{
+	if (Shapes.IsEmpty()) return nullptr;
+
+	return Shapes[CurrentShapeIndex];
+}
+
 void AOnlineBotsCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {	
 	// Set up action bindings
@@ -59,6 +79,12 @@ void AOnlineBotsCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AOnlineBotsCharacter::Look);
+		
+		// Trow
+		EnhancedInputComponent->BindAction(ThrowAction, ETriggerEvent::Started, this, &AOnlineBotsCharacter::Client_WantThrow);
+		
+		// ChangeShape
+		EnhancedInputComponent->BindAction(ChangeShapeAction, ETriggerEvent::Triggered, this, &AOnlineBotsCharacter::ChangeShape);
 	}
 	else
 	{
